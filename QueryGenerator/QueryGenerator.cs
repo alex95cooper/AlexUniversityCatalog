@@ -8,49 +8,45 @@ namespace AlexUniversityCatalog
 {
     internal class QueryGenerator
     {
+        private const string TeachersTableColumnsJoin = "FirstName, LastName, Age, Experience, Name AS Subjects " +
+            "FROM Teachers INNER JOIN Subjects ON Teachers.ID = Subjects.ID";
+        private const string StudentsTableColumnsJoin = "FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects " +
+            "FROM Students_Subjects " +
+            "INNER JOIN Students ON Students.ID = Students_Subjects.StudID " +
+            "INNER JOIN Faculties ON Students.FacID = Faculties.ID " +
+            "LEFT JOIN Subjects ON Students_Subjects.SubjID = Subjects.ID " +
+            "GROUP BY Students.ID, FirstName, LastName, Age, Year, Faculties.Name ";
+
+
         private readonly string[] _selectQuery = new string[10];
 
         public QueryGenerator(string tableName)
         {
             string tableColumns = GetTableColumns(tableName);
-            FillSelectQueryByEmptyStrings();
             FillSelectQuery(tableName, tableColumns);
         }
 
-        public string GetSelectQuery(int offsetCount, int fetchRowsCount, string sortingOrder = "ASC ")
+        public string GetSelectQuery(int offsetCount, int fetchRowsCount, string nameOrderBy, string sortingOrder)
         {
+            _selectQuery[(int)QueryToken.NameOrderBy] = nameOrderBy + " ";
             _selectQuery[(int)QueryToken.SortingOrder] = sortingOrder;
             _selectQuery[(int)QueryToken.OffsetCount] = offsetCount.ToString();
             _selectQuery[(int)QueryToken.FetchRowsCount] = fetchRowsCount.ToString();
             return _selectQuery.ToQueryString();
         }
 
-        private string GetTableColumns(string tableName)
+        private static string GetTableColumns(string tableName)
         {
             string tableColumns = tableName switch
             {
                 "Faculties" => "Name, Description FROM Faculties",
                 "Subjects" => "Name, Description FROM Subjects",
-                "Teachers" => @"FirstName, LastName, Age, Experience, Name AS Subjects 
-                               FROM Teachers 
-                               INNER JOIN Subjects ON Teachers.ID = Subjects.ID",
-                "Students" => @"FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects FROM Students_Subjects
-                               INNER JOIN Students ON Students.ID = Students_Subjects.StudID
-                               INNER JOIN Faculties ON Students.FacID = Faculties.ID 
-                               LEFT JOIN Subjects ON Students_Subjects.SubjID = Subjects.ID 
-                               GROUP BY Students.ID, FirstName, LastName, Age, Year, Faculties.Name ",
+                "Teachers" => TeachersTableColumnsJoin,
+                "Students" => StudentsTableColumnsJoin,
                 _ => string.Empty,
             };
 
             return tableColumns;
-        }
-
-        private void FillSelectQueryByEmptyStrings()
-        {
-            for (int i = 0; i < _selectQuery.Length; i++)
-            {
-                _selectQuery[i] = string.Empty;
-            }
         }
 
         private void FillSelectQuery(string tableName, string tableColumns)
@@ -63,7 +59,5 @@ namespace AlexUniversityCatalog
             _selectQuery[7] = " ROWS FETCH NEXT ";
             _selectQuery[9] = " ROWS ONLY";
         }
-
-
     }
 }
