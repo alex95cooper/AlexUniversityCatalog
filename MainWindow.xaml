@@ -5,14 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AlexUniversityCatalog"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="500">
+        Title="MainWindow" Height="450" Width="500" ResizeMode="CanMinimize">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="FontSize" Value="28"/>
             <Setter Property="Width" Value="200"/>
             <Setter Property="Height" Value="50"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
         </Style>
     </Window.Resources>
     

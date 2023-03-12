@@ -5,7 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AlexUniversityCatalog"
         mc:Ignorable="d"
-        Title="TableWindow" Height="450" Width="800">
+        Title="TableWindow" Height="460" Width="800" ResizeMode="CanMinimize" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Height" Value="30"/>
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+    </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
@@ -21,19 +32,24 @@
         </StackPanel>
         <TextBlock x:Name="PagesCounterBlock" Grid.Row="0"  VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="20" Foreground="SlateGray"/>
         <DataGrid x:Name="Table" Grid.Row="1" Margin="5" BorderThickness="2" CanUserAddRows="False" LoadingRow="Table_LoadingRow"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5">
+            <Button x:Name="AddButton" Content="Add" Click="AddButton_Click"/>
+            <Rectangle Width="10"/>
+            <Button x:Name="DeleteButton" Content="Delete" Click="DeleteButton_Click"/>
+            <Rectangle Width="10"/>
+            <Button x:Name="UpdteButton" Content="Update" Click="UpdteButton_Click"/>
+        </StackPanel>
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Center">
-            <TextBlock  Text="Order by : " FontSize="20"/>
-            <TextBox x:Name="OrderNameBox" Width="200" BorderThickness="2"/>
-            <Viewbox Height="20" Margin="5">
-                <RadioButton x:Name="AscendingButton" GroupName="Ascending" Content="Ascending" IsChecked="true" FontSize="10"  />
+            <TextBlock Text="Order by :" Margin="5,0" FontSize="20"/>
+            <Rectangle Width="13"/> 
+            <TextBox x:Name="OrderNameBox" Width="210" BorderThickness="2"/>
+            <Viewbox Height="20" Margin="4">
+                <RadioButton x:Name="AscendingButton" GroupName="Ascending" Content="Ascending " IsChecked="true"/>
             </Viewbox>
             <Viewbox Height="20">
-                <RadioButton GroupName="Ascending" Content="Descending" FontSize="10" />
+                <RadioButton GroupName="Ascending" Content="Descending"/>
             </Viewbox>
         </StackPanel>
-        <Button x:Name="OrderButton" Grid.Row="4" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" FontSize="20" Click="OrderButton_Click">Order</Button>
-
-
-
+        <Button x:Name="OrderButton" Grid.Row="4" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Center" Click="OrderButton_Click">Order</Button>
     </Grid>
 </Window>

@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace AlexUniversityCatalog
 {
-    internal class QueryGenerator
+    internal class SelectQueryGenerator
     {
-        private const string TeachersTableColumnsJoin = "FirstName, LastName, Age, Experience, Name AS Subjects " +
-            "FROM Teachers INNER JOIN Subjects ON Teachers.ID = Subjects.ID";
+        private const string SubjectsTableQueryString = "Subjects.Name, Faculties.Name AS Faculty, Subjects.Description FROM Subjects " +
+            "INNER JOIN Faculties ON Faculties.ID = Subjects.FacID ";
+        private const string TeachersTableColumnsJoin = "FirstName, LastName, Age, Experience, Name AS Subject " +
+            "FROM Teachers INNER JOIN Subjects ON Teachers.SubjID = Subjects.ID";
         private const string StudentsTableColumnsJoin = "FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects " +
             "FROM Students_Subjects " +
             "INNER JOIN Students ON Students.ID = Students_Subjects.StudID " +
@@ -20,7 +22,7 @@ namespace AlexUniversityCatalog
 
         private readonly string[] _selectQuery = new string[10];
 
-        public QueryGenerator(string tableName)
+        public SelectQueryGenerator(string tableName)
         {
             string tableColumns = GetTableColumns(tableName);
             FillSelectQuery(tableName, tableColumns);
@@ -28,10 +30,10 @@ namespace AlexUniversityCatalog
 
         public string GetSelectQuery(int offsetCount, int fetchRowsCount, string nameOrderBy, string sortingOrder)
         {
-            _selectQuery[(int)QueryToken.NameOrderBy] = nameOrderBy + " ";
-            _selectQuery[(int)QueryToken.SortingOrder] = sortingOrder;
-            _selectQuery[(int)QueryToken.OffsetCount] = offsetCount.ToString();
-            _selectQuery[(int)QueryToken.FetchRowsCount] = fetchRowsCount.ToString();
+            _selectQuery[(int)SelectQueryToken.NameOrderBy] = nameOrderBy + " ";
+            _selectQuery[(int)SelectQueryToken.SortingOrder] = sortingOrder;
+            _selectQuery[(int)SelectQueryToken.OffsetCount] = offsetCount.ToString();
+            _selectQuery[(int)SelectQueryToken.FetchRowsCount] = fetchRowsCount.ToString();
             return _selectQuery.ToQueryString();
         }
 
@@ -40,10 +42,10 @@ namespace AlexUniversityCatalog
             string tableColumns = tableName switch
             {
                 "Faculties" => "Name, Description FROM Faculties",
-                "Subjects" => "Name, Description FROM Subjects",
+                "Subjects" => SubjectsTableQueryString,
                 "Teachers" => TeachersTableColumnsJoin,
                 "Students" => StudentsTableColumnsJoin,
-                _ => string.Empty,
+                _ => string.Empty
             };
 
             return tableColumns;

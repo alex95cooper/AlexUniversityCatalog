@@ -3,7 +3,6 @@ using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 
-
 namespace AlexUniversityCatalog
 {
     public partial class TableWindow : Window
@@ -15,7 +14,7 @@ namespace AlexUniversityCatalog
 
         private SqlConnectionStringBuilder _stringBuilder = null;
         private SqlConnection _conection = null;
-        private QueryGenerator _queryGenerator = null;
+        private SelectQueryGenerator _selectQueryGenerator = null;
         private DataSet _dataSet = null;
         private string _nameOrderBy;
         private string _tableName;
@@ -84,7 +83,7 @@ namespace AlexUniversityCatalog
 
         private void InitializeTable(string tableName)
         {
-            _queryGenerator = new(tableName);
+            _selectQueryGenerator = new(tableName);
             _tableName = tableName;
             TableNameBlock.Text = tableName;
             _nameOrderBy = tableName + ".ID";
@@ -95,7 +94,7 @@ namespace AlexUniversityCatalog
         {
             ShowPagesCounter();
             string sortingOrder = ((bool)AscendingButton.IsChecked) ? "ASC " : "DESC ";
-            string query = _queryGenerator.GetSelectQuery(_offsetCounter, FetchRowsCount, _nameOrderBy, sortingOrder);
+            string query = _selectQueryGenerator.GetSelectQuery(_offsetCounter, FetchRowsCount, _nameOrderBy, sortingOrder);
             SqlDataAdapter adapter = new(query, _conection);
             _dataSet = new();
             adapter.Fill(_dataSet);
@@ -109,6 +108,29 @@ namespace AlexUniversityCatalog
             int pageCount = rowCount / FetchRowsCount;
             pageCount = (rowCount % FetchRowsCount > 0) ? pageCount + 1 : pageCount;
             PagesCounterBlock.Text = ((_offsetCounter / FetchRowsCount) + 1).ToString() + " / " + pageCount.ToString();
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddWindow addWindow = new(_tableName, _conection);
+            addWindow.Owner = this;
+            addWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            addWindow.ShowDialog();
+        }
+
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void UpdteButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Window_Closed(object sender, System.EventArgs e)
+        {
+
         }
     }
 }

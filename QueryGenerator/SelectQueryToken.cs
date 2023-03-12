@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AlexUniversityCatalog
 {
-    internal enum QueryToken
+    internal enum SelectQueryToken
     {
         ColumnsName = 1,
         NameOrderBy = 3,
