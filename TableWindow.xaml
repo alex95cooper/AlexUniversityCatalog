@@ -31,7 +31,7 @@
             <Button x:Name="Next" Width="30" Click="Next_Click" FontSize="18">→</Button>
         </StackPanel>
         <TextBlock x:Name="PagesCounterBlock" Grid.Row="0"  VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="20" Foreground="SlateGray"/>
-        <DataGrid x:Name="Table" Grid.Row="1" Margin="5" BorderThickness="2" CanUserAddRows="False" LoadingRow="Table_LoadingRow"/>
+        <DataGrid x:Name="Table" Grid.Row="1" Margin="5" BorderThickness="2" CanUserAddRows="False" LoadingRow="Table_LoadingRow" AutoGeneratingColumn="Table_AutoGeneratingColumn"/>
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5">
             <Button x:Name="AddButton" Content="Add" Click="AddButton_Click"/>
             <Rectangle Width="10"/>

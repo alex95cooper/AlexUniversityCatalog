@@ -8,11 +8,11 @@ namespace AlexUniversityCatalog
 {
     internal class SelectQueryGenerator
     {
-        private const string SubjectsTableQueryString = "Subjects.Name, Faculties.Name AS Faculty, Subjects.Description FROM Subjects " +
+        private const string SubjectsTableQueryString = "Subjects.ID, Subjects.Name, Faculties.Name AS Faculty, Subjects.Description FROM Subjects " +
             "INNER JOIN Faculties ON Faculties.ID = Subjects.FacID ";
-        private const string TeachersTableColumnsJoin = "FirstName, LastName, Age, Experience, Name AS Subject " +
+        private const string TeachersTableColumnsJoin = "Teachers.ID, FirstName, LastName, Age, Experience, Name AS Subject " +
             "FROM Teachers INNER JOIN Subjects ON Teachers.SubjID = Subjects.ID";
-        private const string StudentsTableColumnsJoin = "FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects " +
+        private const string StudentsTableColumnsJoin = "Students.ID, FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects " +
             "FROM Students_Subjects " +
             "INNER JOIN Students ON Students.ID = Students_Subjects.StudID " +
             "INNER JOIN Faculties ON Students.FacID = Faculties.ID " +
@@ -41,7 +41,7 @@ namespace AlexUniversityCatalog
         {
             string tableColumns = tableName switch
             {
-                "Faculties" => "Name, Description FROM Faculties",
+                "Faculties" => "ID, Name, Description FROM Faculties",
                 "Subjects" => SubjectsTableQueryString,
                 "Teachers" => TeachersTableColumnsJoin,
                 "Students" => StudentsTableColumnsJoin,

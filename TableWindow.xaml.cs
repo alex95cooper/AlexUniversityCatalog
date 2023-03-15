@@ -97,7 +97,7 @@ namespace AlexUniversityCatalog
             string query = _selectQueryGenerator.GetSelectQuery(_offsetCounter, FetchRowsCount, _nameOrderBy, sortingOrder);
             SqlDataAdapter adapter = new(query, _conection);
             _dataSet = new();
-            adapter.Fill(_dataSet);
+            adapter.Fill(_dataSet);  
             Table.ItemsSource = _dataSet.Tables[0].DefaultView;
         }
 
@@ -120,7 +120,10 @@ namespace AlexUniversityCatalog
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-
+            DataRowView row = (DataRowView)Table.SelectedItem;
+            SqlCommand command = new($"DELETE FROM {_tableName} WHERE ID = " + row.Row["ID"], _conection);
+            int rows = command.ExecuteNonQuery();
+            _dataSet.Tables[0].Rows.Remove(row.Row);
         }
 
         private void UpdteButton_Click(object sender, RoutedEventArgs e)
@@ -131,6 +134,14 @@ namespace AlexUniversityCatalog
         private void Window_Closed(object sender, System.EventArgs e)
         {
 
+        }
+
+        private void Table_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            if (e.Column.Header.ToString() == "ID")
+            {
+                e.Column.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }
