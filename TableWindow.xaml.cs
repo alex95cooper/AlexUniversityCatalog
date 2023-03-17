@@ -87,7 +87,7 @@ namespace AlexUniversityCatalog
             {
                 MessageBox.Show(DeleteErrorMessage);
             }
-            else
+            else if (MessageBox.Show("Are you sure, you want to delete this row?", "Deleting", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 SqlCommand command = new($"DELETE FROM {_tableName} WHERE ID = " + row.Row["ID"], _connection);
                 command.ExecuteNonQuery();
