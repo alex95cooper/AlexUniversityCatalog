@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace AlexUniversityCatalog
 { 
@@ -47,8 +43,7 @@ namespace AlexUniversityCatalog
         public static List<string> GetInsertStudentsSubjectsQueries(int studentID, string subjectNames)
         {
             List<string> queries = new();
-            List<string> subjectNamesCollection = new();
-            subjectNamesCollection.AddRange(subjectNames.Split(", "));
+            List<string> subjectNamesCollection = new(subjectNames.Split(", "));
             foreach (string subjectName in subjectNamesCollection)
             {
                 queries.Add($"INSERT INTO Students_Subjects (StudID, SubjID) VALUES ({studentID}, (SELECT ID FROM Subjects WHERE Subjects.Name = '{subjectName}'))");

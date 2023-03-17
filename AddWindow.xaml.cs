@@ -64,7 +64,7 @@ namespace AlexUniversityCatalog
 
         private string SelectSqlQuery()
         {
-            string query = _tableName switch
+            return _tableName switch
             {
                 "Faculties" => GetInsertFacultyQuery(),
                 "Subjects" => GetInsertSubjectQuery(),
@@ -72,8 +72,6 @@ namespace AlexUniversityCatalog
                 "Students" => GetInsertStudentsQuery(),
                 _ => string.Empty
             };
-
-            return query;
         }
 
         private string GetInsertFacultyQuery()
@@ -103,26 +101,28 @@ namespace AlexUniversityCatalog
         {
             if (_tableName == "Students")
             {
-                SqlCommand cmd = new("SELECT MAX(ID) FROM Students", _connection);
-                int studentId = (int)cmd.ExecuteScalar();
                 try
-                {                   
-                    List<string> queries = InsertQueryGenerator.GetInsertStudentsSubjectsQueries(studentId, SubjectsTextBox.Text);
+                {
+                    SqlCommand command = new("SELECT MAX(ID) FROM Students", _connection);
+                    List<string> queries = InsertQueryGenerator.GetInsertStudentsSubjectsQueries((int)command.ExecuteScalar(), SubjectsTextBox.Text);
                     foreach (string query in queries)
                     {
-                        cmd = new(query, _connection);
-                        cmd.ExecuteNonQuery();
+                        command = new(query, _connection);
+                        command.ExecuteNonQuery();
                     }
                 }
                 catch
                 {
-                    cmd = new("DELETE FROM Students WHERE ID = (SELECT MAX(ID) FROM Students)", _connection);
-                    cmd.ExecuteNonQuery();
-                    MessageBox.Show(ErrorMessage);
+                    CancelAddingStudent();
                 }
             } 
+        }
 
-
+        private void CancelAddingStudent()
+        {
+            SqlCommand command = new("DELETE FROM Students WHERE ID = (SELECT MAX(ID) FROM Students)", _connection);
+            command.ExecuteNonQuery();
+            MessageBox.Show(ErrorMessage);
         }
     }
 }

@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AlexUniversityCatalog
+﻿namespace AlexUniversityCatalog
 {
     internal class SelectQueryGenerator
     {
-        private const string SubjectsTableQueryString = "Subjects.ID, Subjects.Name, Faculties.Name AS Faculty, Subjects.Description FROM Subjects " +
-            "INNER JOIN Faculties ON Faculties.ID = Subjects.FacID ";
-        private const string TeachersTableColumnsJoin = "Teachers.ID, FirstName, LastName, Age, Experience, Name AS Subject " +
-            "FROM Teachers INNER JOIN Subjects ON Teachers.SubjID = Subjects.ID";
-        private const string StudentsTableColumnsJoin = "Students.ID, FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects " +
-            "FROM Students_Subjects " +
-            "INNER JOIN Students ON Students.ID = Students_Subjects.StudID " +
-            "INNER JOIN Faculties ON Students.FacID = Faculties.ID " +
-            "LEFT JOIN Subjects ON Students_Subjects.SubjID = Subjects.ID " +
-            "GROUP BY Students.ID, FirstName, LastName, Age, Year, Faculties.Name ";
+        private const string SubjectsTableQueryString = @"Subjects.ID, Subjects.Name, Faculties.Name AS Faculty, Subjects.Description FROM Subjects 
+        INNER JOIN Faculties ON Faculties.ID = Subjects.FacID ";
+        private const string TeachersTableColumnsJoin = @"Teachers.ID, FirstName, LastName, Age, Experience, Name AS Subject 
+        FROM Teachers INNER JOIN Subjects ON Teachers.SubjID = Subjects.ID";
+        private const string StudentsTableColumnsJoin = @"Students.ID, FirstName, LastName, Age, Year, Faculties.Name AS Faculty, STRING_AGG(Subjects.Name, ', ') AS Subjects 
+        FROM Students_Subjects 
+        INNER JOIN Students ON Students.ID = Students_Subjects.StudID 
+        INNER JOIN Faculties ON Students.FacID = Faculties.ID 
+        LEFT JOIN Subjects ON Students_Subjects.SubjID = Subjects.ID 
+        GROUP BY Students.ID, FirstName, LastName, Age, Year, Faculties.Name ";
 
 
         private readonly string[] _selectQuery = new string[10];
@@ -39,7 +33,7 @@ namespace AlexUniversityCatalog
 
         private static string GetTableColumns(string tableName)
         {
-            string tableColumns = tableName switch
+            return tableName switch
             {
                 "Faculties" => "ID, Name, Description FROM Faculties",
                 "Subjects" => SubjectsTableQueryString,
@@ -47,8 +41,6 @@ namespace AlexUniversityCatalog
                 "Students" => StudentsTableColumnsJoin,
                 _ => string.Empty
             };
-
-            return tableColumns;
         }
 
         private void FillSelectQuery(string tableName, string tableColumns)
