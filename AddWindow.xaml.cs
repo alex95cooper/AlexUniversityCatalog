@@ -1,37 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace AlexUniversityCatalog
 {
-    /// <summary>
-    /// Interaction logic for AddWindow.xaml
-    /// </summary>
     public partial class AddWindow : Window
     {
         private const string ErrorMessage = "You entered an invalid value(s). Maybe you not have filled in the required fields(*) or entered an already existing value.";
 
         private readonly string _tableName;
-        private readonly SqlConnection _connection;
-        private readonly InsertQueryGenerator _insertQureyGenerator;
+        private readonly string _connectionString;
 
-        public AddWindow(string tableName, SqlConnection connection)
+        public AddWindow(string tableName, string connectionString)
         {
             InitializeComponent();
             _tableName = tableName;
-            _connection = connection;
-            _insertQureyGenerator = new(tableName);
+            _connectionString = connectionString;
             SelectWindowView(tableName);
         }
 
@@ -39,10 +22,7 @@ namespace AlexUniversityCatalog
         {
             try
             {
-                string query = SelectSqlQuery();
-                SqlCommand sqlCommand = new(query, _connection);
-                sqlCommand.ExecuteNonQuery();
-                AddSubjectsIfNeeded();
+                SelectEntityToInsert();
                 this.DialogResult = true;
             }
             catch
@@ -76,67 +56,80 @@ namespace AlexUniversityCatalog
             };
         }
 
-        private string SelectSqlQuery()
+        private void SelectEntityToInsert()
         {
-            return _tableName switch
+            switch (_tableName)
             {
-                "Faculties" => GetInsertFacultyQuery(),
-                "Subjects" => GetInsertSubjectQuery(),
-                "Teachers" => GetInsertTeacherQuery(),
-                "Students" => GetInsertStudentsQuery(),
-                _ => string.Empty
+                case "Faculties":
+                    InsertNewFaculty();
+                    break;
+                case "Subjects":
+                    InsertNewSubject();
+                    break;
+                case "Teachers":
+                    InsertNewTeacher();
+                    break;
+                case "Students":
+                    InsertNewStudent();
+                    break;
             };
         }
 
-        private string GetInsertFacultyQuery()
+        private void InsertNewFaculty()
         {
-            return _insertQureyGenerator.GetInsertFacultyQuery(NameTextBox.Text, DescriptionTextBox.Text);
+            Faculty faculty = new();
+            faculty.Name = NameTextBox.Text;
+            faculty.Description = DescriptionTextBox.Text;
+            FacultyRepository.Insert(faculty, _connectionString);
         }
 
-        private string GetInsertSubjectQuery()
+        private void InsertNewSubject()
         {
-            return _insertQureyGenerator.GetInsertSubjectQuery(NameTextBox.Text,
-                FacultyNameTextBox.Text, DescriptionTextBox.Text);
+            Subject subject = new();
+            subject.Name = NameTextBox.Text;
+            subject.Description = DescriptionTextBox.Text;
+            subject.Faculty = new();
+            subject.Faculty.Name = FacultyNameTextBox.Text;
+            SubjectRepository.Insert(subject, _connectionString);
         }
 
-        private string GetInsertTeacherQuery()
+        private void InsertNewTeacher()
         {
-            return _insertQureyGenerator.GetInsertTeacherQuery(FirstNameTextBox.Text,
-                LastNameTextBox.Text, AgeTextBox.Text, ExperienceTextBox.Text, SubjectTextBox.Text);
+            Teacher teacher = new();
+            teacher.FirstName = FirstNameTextBox.Text;
+            teacher.LastName = LastNameTextBox.Text;
+            teacher.Age = int.Parse(AgeTextBox.Text);
+            teacher.Experience = int.Parse(ExperienceTextBox.Text);
+            teacher.Subject = new();
+            teacher.Subject.Name = SubjectTextBox.Text;
+            TeacherRepository.Insert(teacher, _connectionString);
         }
 
-        private string GetInsertStudentsQuery()
+        private void InsertNewStudent()
         {
-            return _insertQureyGenerator.GetInsertStudentsQuery(FirstNameTextBox.Text,
-                LastNameTextBox.Text, AgeTextBox.Text, YearTextBox.Text, FacultyTextBox.Text);
+            Student student = new();
+            student.FirstName = FirstNameTextBox.Text;
+            student.LastName = LastNameTextBox.Text;
+            student.Age = int.Parse(AgeTextBox.Text);
+            student.Year = int.Parse(YearTextBox.Text);
+            student = FillStudentWithSubjects(student);
+            student.Faculty = new();
+            student.Faculty.Name= FacultyTextBox.Text;
+            StudentRepository.Insert(student, _connectionString);
         }
 
-        private void AddSubjectsIfNeeded()
+        private Student FillStudentWithSubjects(Student student)
         {
-            if (_tableName == "Students")
+            student.Subjects = new();
+            List<string> subjectNamesCollection = new(SubjectsTextBox.Text.Split(", "));
+            foreach (string subjectName in subjectNamesCollection)
             {
-                try
-                {
-                    SqlCommand command = new("SELECT MAX(ID) FROM Students", _connection);
-                    List<string> queries = InsertQueryGenerator.GetInsertStudentsSubjectsQueries((int)command.ExecuteScalar(), SubjectsTextBox.Text);
-                    foreach (string query in queries)
-                    {
-                        command = new(query, _connection);
-                        command.ExecuteNonQuery();
-                    }
-                }
-                catch
-                {
-                    CancelAddingStudent();
-                }
+                Subject subject = new();
+                subject.Name = subjectName;
+                student.Subjects.Add(subject);
             }
-        }
 
-        private void CancelAddingStudent()
-        {
-            SqlCommand command = new("DELETE FROM Students WHERE ID = (SELECT MAX(ID) FROM Students)", _connection);
-            command.ExecuteNonQuery();
-            MessageBox.Show(ErrorMessage);
+            return student;
         }
     }
 }
