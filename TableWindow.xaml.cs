@@ -4,7 +4,6 @@ using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 
-
 namespace AlexUniversityCatalog
 {
     public partial class TableWindow : Window
