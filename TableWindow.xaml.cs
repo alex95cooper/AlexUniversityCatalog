@@ -17,7 +17,7 @@ namespace AlexUniversityCatalog
 
         private readonly string _tableName;
 
-        private SqlConnectionStringBuilder _stringBuilder = null;
+        private SqlConnectionStringBuilder _stringBuilder;
         private string _nameOrderBy;
         private int _offsetCounter;
 
@@ -73,9 +73,11 @@ namespace AlexUniversityCatalog
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            AddWindow addWindow = new(_tableName, _stringBuilder.ConnectionString);
-            addWindow.Owner = this;
-            addWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            AddWindow addWindow = new(_tableName, _stringBuilder.ConnectionString)
+            {
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
             addWindow.ShowDialog();
             ShowTable();
         }
@@ -95,13 +97,13 @@ namespace AlexUniversityCatalog
             }
         }
 
-        private void UpdteButton_Click(object sender, RoutedEventArgs e)
+        private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            for (int item = 0; item < Table.Items.Count; item++)
+            foreach (var t in Table.Items)
             {
                 try
                 {
-                    DataRowView rowData = Table.Items[item] as DataRowView;
+                    DataRowView rowData = t as DataRowView;
                     SelectUpdateQuery(rowData);
                 }
                 catch
@@ -113,10 +115,12 @@ namespace AlexUniversityCatalog
 
         private void SetFieldsForStringBuilder()
         {
-            _stringBuilder = new();
-            _stringBuilder.DataSource = ServerName;
-            _stringBuilder.InitialCatalog = CatalogName;
-            _stringBuilder.IntegratedSecurity = true;
+            _stringBuilder = new()
+            {
+                DataSource = ServerName,
+                InitialCatalog = CatalogName,
+                IntegratedSecurity = true
+            };
         }
 
         private void ShowTable()
