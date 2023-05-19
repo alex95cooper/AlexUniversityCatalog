@@ -2,7 +2,7 @@
 
 namespace AlexUniversityCatalog
 {
-    internal static class SubjectListExtension
+    internal static class SubjectListExtensions
     {
         public static string ToSubjectsString(this List<Subject> subjects)
         {

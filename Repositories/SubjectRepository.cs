@@ -18,14 +18,18 @@ namespace AlexUniversityCatalog
 
         public static List<Subject> GetSubjects(string connectionString, string nameOrderBy, string sortingOrder)
         {
-            List<Subject> subjects = new();
-            using (IDbConnection db = new SqlConnection(connectionString))
+            if (FacultyRepository.CheckIfNameValid(GetColunmNames(), nameOrderBy))
             {
-                subjects = db.Query<Subject, Faculty, Subject>(string.Format(SelectSubjectsQuery, nameOrderBy, sortingOrder),
-                    (subject, faculty) => { subject.Faculty = faculty; return subject; }).ToList();
-            }
+                List<Subject> subjects = new();
+                using (IDbConnection db = new SqlConnection(connectionString))
+                {
+                    subjects = db.Query<Subject, Faculty, Subject>(string.Format(SelectSubjectsQuery, nameOrderBy, sortingOrder),
+                        (subject, faculty) => { subject.Faculty = faculty; return subject; }).ToList();
+                }
 
-            return subjects;
+                return subjects;
+            }
+            return null;
         }
 
         public static DataTable GetTable(string connectionString, string nameOrderBy, string sortingOrder, int offsetCount, int fetchRowsCount)
@@ -70,6 +74,11 @@ namespace AlexUniversityCatalog
         {
             return new DataColumn[] { new("ID", typeof(int)), new("Name", typeof(string)),
                 new("Faculty", typeof(string)), new("Description", typeof(string)) };
+        }
+
+        private static List<string> GetColunmNames()
+        {
+            return new() { "Subjects.ID", "Name", "Faculty", "Description" };
         }
     }
 }

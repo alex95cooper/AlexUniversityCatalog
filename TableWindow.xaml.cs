@@ -19,6 +19,7 @@ namespace AlexUniversityCatalog
 
         private SqlConnectionStringBuilder _stringBuilder;
         private string _nameOrderBy;
+        private string _oldNameOrderBy;
         private int _offsetCounter;
 
         public TableWindow(string tableName)
@@ -58,17 +59,9 @@ namespace AlexUniversityCatalog
 
         private void OrderButton_Click(object sender, RoutedEventArgs e)
         {
-            string oldNameOrderBy = _nameOrderBy;
-            try
-            {
-                _nameOrderBy = OrderNameBox.Text;
-                ShowTable();
-            }
-            catch
-            {
-                _nameOrderBy = oldNameOrderBy;
-                MessageBox.Show(OrderErrorMessage);
-            }
+            _oldNameOrderBy = _nameOrderBy;
+            _nameOrderBy = OrderNameBox.Text;
+            ShowTable();
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -92,7 +85,7 @@ namespace AlexUniversityCatalog
             else if (MessageBox.Show("Are you sure, you want to delete this row?", "Deleting", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 using IDbConnection db = new SqlConnection(_stringBuilder.ConnectionString);
-                db.Execute($"DELETE FROM {_tableName} WHERE ID = " + row.Row["ID"]);
+                db.Execute($"DELETE FROM {_tableName} WHERE ID = @id", new {id = row.Row["ID"] });
                 ShowTable();
             }
         }
@@ -136,7 +129,20 @@ namespace AlexUniversityCatalog
                 _ => new()
             };
 
-            Table.ItemsSource = table.DefaultView;
+            ShowValidTable(table);
+        }
+
+        private void ShowValidTable(DataTable table)
+        {
+            if (table == null)
+            {
+                _nameOrderBy = _oldNameOrderBy;
+                MessageBox.Show(OrderErrorMessage);
+            }
+            else
+            {
+                Table.ItemsSource = table.DefaultView;
+            }
         }
 
         private void ShowPagesCounter()
@@ -149,7 +155,7 @@ namespace AlexUniversityCatalog
 
         private int GetEntityCount()
         {
-            using IDbConnection db = new SqlConnection(_stringBuilder.ConnectionString);      
+            using IDbConnection db = new SqlConnection(_stringBuilder.ConnectionString);
             return db.ExecuteScalar<int>($"SELECT COUNT(*) FROM {_tableName}");
         }
 

@@ -27,23 +27,28 @@ namespace AlexUniversityCatalog
 
         public static List<Student> GetStudents(string connectionString, string nameOrderBy, string sortingOrder)
         {
-            List<Student> students = new();
-            using (IDbConnection db = new SqlConnection(connectionString))
+            if (FacultyRepository.CheckIfNameValid(GetColunmNames(), nameOrderBy))
             {
-                students = db.Query<Student, Faculty, Subject, Student>(string.Format(SelectStudentsQuery, nameOrderBy, sortingOrder), (student, faculty, subject) =>
+                List<Student> students = new();
+                using (IDbConnection db = new SqlConnection(connectionString))
                 {
-                    student.Faculty = faculty;
-                    if (student.Subjects == null)
+                    students = db.Query<Student, Faculty, Subject, Student>(string.Format(SelectStudentsQuery, nameOrderBy, sortingOrder), (student, faculty, subject) =>
                     {
-                        student.Subjects = new();
-                        student.Subjects.Add(subject);
-                    }
-                    return student;
-                }).ToList();
-                students = MergeRepeatingStudents(students);
+                        student.Faculty = faculty;
+                        if (student.Subjects == null)
+                        {
+                            student.Subjects = new();
+                            student.Subjects.Add(subject);
+                        }
+                        return student;
+                    }).ToList();
+                    students = MergeRepeatingStudents(students);
+                }
+
+                return students;
             }
 
-            return students;
+            return null;
         }
 
         public static DataTable GetTable(string connectionString, string nameOrderBy, string sortingOrder, int offsetCount, int fetchRowsCount)
@@ -163,6 +168,11 @@ namespace AlexUniversityCatalog
             }
 
             return true;
+        }
+
+        private static List<string> GetColunmNames()
+        {
+            return new() { "Students.ID", "FirstName", "LastName", "Age", "Year", "Faculty", "Subjects" };
         }
     }
 }
