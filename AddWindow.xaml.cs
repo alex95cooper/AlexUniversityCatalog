@@ -10,14 +10,14 @@ namespace AlexUniversityCatalog
 
         private readonly string _tableName;
         private readonly SqlConnection _connection;
-        private readonly InsertQueryGenerator _insertQureyGenerator;
+        private readonly Inserter _inserter;
 
         public AddWindow(string tableName, SqlConnection connection)
         {
             InitializeComponent();
             _tableName = tableName;
             _connection = connection;
-            _insertQureyGenerator = new(tableName);
+            _inserter = new(_connection);
             SelectWindowView(tableName);
         }
 
@@ -25,9 +25,7 @@ namespace AlexUniversityCatalog
         {
             try
             {
-                string query = SelectSqlQuery();
-                SqlCommand sqlCommand = new(query, _connection);
-                sqlCommand.ExecuteNonQuery();
+                AddToSelectedTable();
                 AddSubjectsIfNeeded();
                 this.DialogResult = true;
             }
@@ -62,39 +60,26 @@ namespace AlexUniversityCatalog
             };
         }
 
-        private string SelectSqlQuery()
+        private void AddToSelectedTable()
         {
-            return _tableName switch
+            switch (_tableName)
             {
-                "Faculties" => GetInsertFacultyQuery(),
-                "Subjects" => GetInsertSubjectQuery(),
-                "Teachers" => GetInsertTeacherQuery(),
-                "Students" => GetInsertStudentsQuery(),
-                _ => string.Empty
-            };
-        }
-
-        private string GetInsertFacultyQuery()
-        {
-            return _insertQureyGenerator.GetInsertFacultyQuery(NameTextBox.Text, DescriptionTextBox.Text);
-        }
-
-        private string GetInsertSubjectQuery()
-        {
-            return _insertQureyGenerator.GetInsertSubjectQuery(NameTextBox.Text,
-                FacultyNameTextBox.Text, DescriptionTextBox.Text);
-        }
-
-        private string GetInsertTeacherQuery()
-        {
-            return _insertQureyGenerator.GetInsertTeacherQuery(FirstNameTextBox.Text,
-                LastNameTextBox.Text, AgeTextBox.Text, ExperienceTextBox.Text, SubjectTextBox.Text);
-        }
-
-        private string GetInsertStudentsQuery()
-        {
-            return _insertQureyGenerator.GetInsertStudentsQuery(FirstNameTextBox.Text, 
-                LastNameTextBox.Text, AgeTextBox.Text, YearTextBox.Text, FacultyTextBox.Text);
+                case "Faculties":
+                    _inserter.InsertFaculty(NameTextBox.Text, DescriptionTextBox.Text);
+                    break;
+                case "Subjects":
+                    _inserter.InsertSubject(NameTextBox.Text, FacultyNameTextBox.Text,
+                        DescriptionTextBox.Text);
+                    break;
+                case "Teachers":
+                    _inserter.InsertTeacher(FirstNameTextBox.Text, LastNameTextBox.Text,
+                        AgeTextBox.Text, ExperienceTextBox.Text, SubjectTextBox.Text);
+                    break;
+                case "Students":
+                    _inserter.InsertStudent(FirstNameTextBox.Text, 
+                        LastNameTextBox.Text, AgeTextBox.Text, YearTextBox.Text, FacultyTextBox.Text);
+                    break;
+            }
         }
 
         private void AddSubjectsIfNeeded()
@@ -104,18 +89,13 @@ namespace AlexUniversityCatalog
                 try
                 {
                     SqlCommand command = new("SELECT MAX(ID) FROM Students", _connection);
-                    List<string> queries = InsertQueryGenerator.GetInsertStudentsSubjectsQueries((int)command.ExecuteScalar(), SubjectsTextBox.Text);
-                    foreach (string query in queries)
-                    {
-                        command = new(query, _connection);
-                        command.ExecuteNonQuery();
-                    }
+                    _inserter.InsertStudentsWithSubjects((int)command.ExecuteScalar(), SubjectsTextBox.Text);
                 }
                 catch
                 {
                     CancelAddingStudent();
                 }
-            } 
+            }
         }
 
         private void CancelAddingStudent()

@@ -16,12 +16,13 @@ namespace AlexUniversityCatalog
         private const string CatalogName = "University";
         private const int FetchRowsCount = 5;
 
-        private SqlConnectionStringBuilder _stringBuilder = null;
-        private SqlConnection _connection = null;
-        private SelectQueryGenerator _selectQueryGenerator = null;
-        private UpdateQueryGenerator _updateQueryGenerator = null;
+        private SqlConnectionStringBuilder _stringBuilder;
+        private SqlConnection _connection;
+        private Selector _selector;
+        private Updater _updater;
+
         private SqlDataAdapter _adapter;
-        private DataSet _dataSet = null;
+        private DataSet _dataSet;
         private string _nameOrderBy;
         private string _tableName;
         private int _offsetCounter;
@@ -59,17 +60,8 @@ namespace AlexUniversityCatalog
 
         private void OrderButton_Click(object sender, RoutedEventArgs e)
         {
-            string oldNameOrderBy = _nameOrderBy;
-            try
-            {
-                _nameOrderBy = OrderNameBox.Text;
-                ShowTable();
-            }
-            catch
-            {
-                _nameOrderBy = oldNameOrderBy;
-                MessageBox.Show(OrderErrorMessage);
-            }
+            _nameOrderBy = OrderNameBox.Text;
+            ShowTable();
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -89,7 +81,8 @@ namespace AlexUniversityCatalog
             }
             else if (MessageBox.Show("Are you sure, you want to delete this row?", "Deleting", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                SqlCommand command = new($"DELETE FROM {_tableName} WHERE ID = " + row.Row["ID"], _connection);
+                SqlCommand command = new($"DELETE FROM {_tableName} WHERE ID = @id", _connection);
+                command.Parameters.AddWithValue("@id", row.Row["ID"]);
                 command.ExecuteNonQuery();
                 _dataSet.Tables[0].Rows.Remove(row.Row);
             }
@@ -102,8 +95,7 @@ namespace AlexUniversityCatalog
                 try
                 {
                     DataRowView rowData = Table.Items[item] as DataRowView;
-                    SqlCommand command = new(_updateQueryGenerator.SelectUpdateQuery(rowData), _connection);
-                    command.ExecuteNonQuery();
+                    _updater.UpdateTable(rowData);
                     UpdateSubjectsIfNeeded(rowData);
                 }
                 catch
@@ -144,8 +136,8 @@ namespace AlexUniversityCatalog
         private void InitializeTable(string tableName)
         {
             _tableName = tableName;
-            _selectQueryGenerator = new(_tableName);
-            _updateQueryGenerator = new(_tableName);
+            _selector = new(_tableName);
+            _updater = new(_tableName, _connection);
             TableNameBlock.Text = _tableName;
             _nameOrderBy = _tableName + ".ID";
             ShowTable();
@@ -154,12 +146,9 @@ namespace AlexUniversityCatalog
         private void ShowTable()
         {
             ShowPagesCounter();
-            string sortingOrder = ((bool)AscendingButton.IsChecked) ? "ASC " : "DESC ";
-            string query = _selectQueryGenerator.GetSelectQuery(_offsetCounter, FetchRowsCount, _nameOrderBy, sortingOrder);
-            _adapter = new(query, _connection);
-            _dataSet = new();
-            _adapter.Fill(_dataSet);
-            Table.ItemsSource = _dataSet.Tables[0].DefaultView;
+            string sortingOrder = ((bool)AscendingButton.IsChecked) ? "ASC" : "DESC";
+            string query = _selector.GetSelectQuery(_nameOrderBy, sortingOrder, _offsetCounter, FetchRowsCount);
+            ShowValidTable(query);
         }
 
         private void ShowPagesCounter()
@@ -171,6 +160,22 @@ namespace AlexUniversityCatalog
             PagesCounterBlock.Text = ((_offsetCounter / FetchRowsCount) + 1).ToString() + " / " + pageCount.ToString();
         }
 
+        private void ShowValidTable(string query)
+        {
+            if (query == string.Empty)
+            {
+                _nameOrderBy = _tableName + ".ID";
+                MessageBox.Show(OrderErrorMessage);
+            }
+            else
+            {
+                _adapter = new(query, _connection);
+                _dataSet = new();
+                _adapter.Fill(_dataSet);
+                Table.ItemsSource = _dataSet.Tables[0].DefaultView;
+            }
+        }
+
         private void UpdateSubjectsIfNeeded(DataRowView rowData)
         {
             if (_tableName == "Students")
@@ -178,7 +183,8 @@ namespace AlexUniversityCatalog
                 List<string> subjectNamesUiCollection = new(rowData["Subjects"].ToString().Split(", "));
                 if (CheckIfSubjectsExists(subjectNamesUiCollection))
                 {
-                    SqlCommand command = new($"DELETE FROM Students_Subjects WHERE StudID = {rowData["ID"]}", _connection);
+                    SqlCommand command = new("DELETE FROM Students_Subjects WHERE StudID = @studId", _connection);
+                    command.Parameters.AddWithValue("@studId", rowData["ID"]);
                     command.ExecuteNonQuery();
                     UpdateSubjects(rowData, subjectNamesUiCollection);
                 }
@@ -193,7 +199,8 @@ namespace AlexUniversityCatalog
         {
             foreach (string subjectName in subjectNamesUiCollection)
             {
-                SqlCommand command = new($"SELECT ID FROM Subjects WHERE Name = '{subjectName}'", _connection);
+                SqlCommand command = new("SELECT ID FROM Subjects WHERE Name = @subjectName", _connection);
+                command.Parameters.AddWithValue("@subjectName", subjectName);
                 if (command.ExecuteScalar() == null)
                 {
                     return false;
@@ -207,8 +214,10 @@ namespace AlexUniversityCatalog
         {
             foreach (string subjectName in subjectNamesUiCollection)
             {
-                SqlCommand command = new(@$"INSERT INTO Students_Subjects (StudID, SubjID) 
-                VALUES ({rowData["ID"]}, (SELECT ID FROM Subjects WHERE Name = '{subjectName}'))", _connection);
+                SqlCommand command = new(@"INSERT INTO Students_Subjects (StudID, SubjID) 
+                VALUES (@studId, (SELECT ID FROM Subjects WHERE Name = @subjectName))", _connection);
+                command.Parameters.AddWithValue("@studId", rowData["ID"]);
+                command.Parameters.AddWithValue("@subjectName", subjectName );
                 command.ExecuteNonQuery();
             }
         }

@@ -1,6 +1,6 @@
 ﻿namespace AlexUniversityCatalog
 {
-    public static class StringArrayExtension
+    public static class StringArrayExtensions
     {
         public static string ToQueryString(this string[] query)
         {
