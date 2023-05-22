@@ -7,7 +7,7 @@ using System.Data.SqlClient;
 
 namespace AlexUniversityCatalog
 {
-    internal class SubjectRepository
+    internal static class SubjectRepository
     {
         private const string SelectSubjectsQuery = @"SELECT Subjects.*, Faculties.* FROM Subjects
                 LEFT JOIN Faculties ON Faculties.ID = Subjects.FacID ORDER BY {0} {1}";
@@ -16,34 +16,15 @@ namespace AlexUniversityCatalog
         private const string UpdateSubjectQuery = @"UPDATE Subjects SET Name = @Name, Description = @Description, 
                 FacID = (SELECT Faculties.ID FROM Faculties WHERE Faculties.Name = @Faculty) WHERE ID = @ID";
 
-        public static List<Subject> GetSubjects(string connectionString, string nameOrderBy, string sortingOrder)
+        public static DataTable GetTable(string connectionString, string nameOrderBy, string sortingOrder, int offsetCount, int fetchRowsCount)
         {
             if (FacultyRepository.CheckIfNameValid(GetColunmNames(), nameOrderBy))
             {
-                List<Subject> subjects = new();
-                using (IDbConnection db = new SqlConnection(connectionString))
-                {
-                    subjects = db.Query<Subject, Faculty, Subject>(string.Format(SelectSubjectsQuery, nameOrderBy, sortingOrder),
-                        (subject, faculty) => { subject.Faculty = faculty; return subject; }).ToList();
-                }
-
-                return subjects;
+                List<Subject> subjects = GetSubjects(connectionString, nameOrderBy, sortingOrder);
+                return GetTableWithColumns(subjects, offsetCount, fetchRowsCount);             
             }
+
             return null;
-        }
-
-        public static DataTable GetTable(string connectionString, string nameOrderBy, string sortingOrder, int offsetCount, int fetchRowsCount)
-        {
-            DataTable dataTable = new();
-            List<Subject> subjects = GetSubjects(connectionString, nameOrderBy, sortingOrder);
-            dataTable.Columns.AddRange(GetColumns());
-            fetchRowsCount = (offsetCount + fetchRowsCount > subjects.Count) ? subjects.Count - offsetCount : fetchRowsCount;
-            for (int i = offsetCount; i < offsetCount + fetchRowsCount; i++)
-            {
-                AddRows(dataTable, subjects, i);
-            }
-
-            return dataTable;
         }
 
         public static void Insert(Subject subject, string connectionString)
@@ -63,6 +44,31 @@ namespace AlexUniversityCatalog
                 Faculty = rowData["Faculty"],
                 ID = rowData["ID"]
             });
+        }
+
+        private static List<Subject> GetSubjects(string connectionString, string nameOrderBy, string sortingOrder)
+        {
+            List<Subject> subjects = new();
+            using (IDbConnection db = new SqlConnection(connectionString))
+            {
+                subjects = db.Query<Subject, Faculty, Subject>(string.Format(SelectSubjectsQuery, nameOrderBy, sortingOrder),
+                    (subject, faculty) => { subject.Faculty = faculty; return subject; }).ToList();
+            }
+
+            return subjects;
+        }
+
+        private static DataTable GetTableWithColumns(List<Subject> subjects, int offsetCount, int fetchRowsCount)
+        {
+            DataTable dataTable = new();
+            dataTable.Columns.AddRange(GetColumns());
+            fetchRowsCount = (offsetCount + fetchRowsCount > subjects.Count) ? subjects.Count - offsetCount : fetchRowsCount;
+            for (int i = offsetCount; i < offsetCount + fetchRowsCount; i++)
+            {
+                AddRows(dataTable, subjects, i);
+            }
+
+            return dataTable;
         }
 
         private static void AddRows(DataTable dataTable, List<Subject> entities, int i)

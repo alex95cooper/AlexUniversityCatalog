@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -7,7 +6,7 @@ using System.Linq;
 
 namespace AlexUniversityCatalog
 {
-    internal class FacultyRepository
+    internal static class FacultyRepository
     {
         private const string SelectFacultiesQuery = "SELECT * FROM Faculties ORDER BY {0} {1} ";
         private const string InsertFacultyQuery = @"INSERT INTO Faculties (Name, Description) VALUES (@Name, @Description)";
@@ -17,30 +16,11 @@ namespace AlexUniversityCatalog
         {
             if (CheckIfNameValid(GetColunmNames(), nameOrderBy))
             {
-                DataTable dataTable = new();
                 List<Faculty> faculties = GetFaculties(connectionString, nameOrderBy, sortingOrder);
-                dataTable.Columns.AddRange(GetColumns());
-                fetchRowsCount = (offsetCount + fetchRowsCount > faculties.Count) ? faculties.Count - offsetCount : fetchRowsCount;
-                for (int i = offsetCount; i < offsetCount + fetchRowsCount; i++)
-                {
-                    AddRows(dataTable, faculties, i);
-                }
-
-                return dataTable;
+                return GetTableWithColumns(faculties, offsetCount, fetchRowsCount);
             }
 
             return null;
-        }
-
-        public static List<Faculty> GetFaculties(string connectionString, string nameOrderBy, string sortingOrder)
-        {
-            List<Faculty> faculties = new();
-            using (IDbConnection db = new SqlConnection(connectionString))
-            {
-                faculties = db.Query<Faculty>(string.Format(SelectFacultiesQuery, nameOrderBy, sortingOrder)).ToList();
-            }
-
-            return faculties;
         }
 
         public static void Insert(Faculty faculty, string connectionString)
@@ -68,12 +48,36 @@ namespace AlexUniversityCatalog
             return false;
         }
 
-        private static void AddRows(DataTable dataTable, List<Faculty> entities, int i)
+        private static List<Faculty> GetFaculties(string connectionString, string nameOrderBy, string sortingOrder)
+        {
+            List<Faculty> faculties = new();
+            using (IDbConnection db = new SqlConnection(connectionString))
+            {
+                faculties = db.Query<Faculty>(string.Format(SelectFacultiesQuery, nameOrderBy, sortingOrder)).ToList();
+            }
+
+            return faculties;
+        }
+
+        private static DataTable GetTableWithColumns(List<Faculty> faculties, int offsetCount, int fetchRowsCount)
+        {
+            DataTable dataTable = new();
+            dataTable.Columns.AddRange(GetColumns());
+            fetchRowsCount = (offsetCount + fetchRowsCount > faculties.Count) ? faculties.Count - offsetCount : fetchRowsCount;
+            for (int i = offsetCount; i < offsetCount + fetchRowsCount; i++)
+            {
+                AddRows(dataTable, faculties, i);
+            }
+
+            return dataTable;
+        }
+
+        public static void AddRows(DataTable dataTable, List<Faculty> entities, int i)
         {
             dataTable.Rows.Add(new object[] { entities[i].ID, entities[i].Name, entities[i].Description });
         }
 
-        private static DataColumn[] GetColumns()
+        public static DataColumn[] GetColumns()
         {
             return new DataColumn[] { new("ID", typeof(int)), new("Name", typeof(string)), new("Description", typeof(string)) };
         }

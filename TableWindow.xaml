@@ -37,7 +37,7 @@
             <Rectangle Width="10"/>
             <Button x:Name="DeleteButton" Content="Delete" Click="DeleteButton_Click"/>
             <Rectangle Width="10"/>
-            <Button x:Name="UpdteButton" Content="Update" Click="UpdteButton_Click"/>
+            <Button x:Name="UpdteButton" Content="Update" Click="UpdateButton_Click"/>
         </StackPanel>
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Center">
             <TextBlock Text="Order by :" Margin="5,0" FontSize="20"/>
